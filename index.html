@@ -332,7 +332,7 @@ const PIECES={
 const PAL={};
 Object.entries(PIECES).forEach(([t,p])=>PAL[t]={base:p.c, hi:mix(p.c,'#ffffff',.45), lo:mix(p.c,'#000000',.38)});
 const timeFor=l=>Math.max(55, 150-(l-1)*12);          // plenty at first, tighter each level
-const targetFor=l=>7+((l-1)*7)%5-1;                    // surface row varies 6..10 (a bit above middle)
+const targetFor=l=>13+((l-1)*7)%5-1;                    // surface row varies 6..10 (a bit above middle)
 const dropInterval=()=>Math.max(160, 750-(level-1)*55);
 
 /* ================= canvas ================= */
