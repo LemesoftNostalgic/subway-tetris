@@ -599,61 +599,92 @@ function normalizeTopScores(raw){
     .slice(0,10);
 }
 
-/*
-  DUMMY CLOUD READ FUNCTION.
 
-  Later, replace the body with a real cloud API call, e.g.:
 
-    const res = await fetch('/api/scores');
-    return await res.json();
+const PANTRY_URL = 'https://getpantry.cloud/apiv1/pantry/c721d251-91f5-4f91-931d-42aee433fb2e/basket/highscores';
 
-  The return shape should be:
-    [
-      { "name": "ACE", "score": 12345 },
-      { "name": "BOB", "score": 9876 }
-    ]
-*/
+// --- rate-limit guards ---
+let _saveTimer=null;
+let _pendingPayload=null;
+let _lastCloudFetch=0;
+const CLOUD_TTL_MS=60000;   // don't re-fetch from cloud more than once/min
+const SAVE_DEBOUNCE_MS=3000; // wait 3s after last change before pushing
+
 async function loadTopScores(){
+  const now=Date.now();
+
+  // Serve from local cache if we fetched recently — avoids hammering Pantry.
+  if(now - _lastCloudFetch < CLOUD_TTL_MS){
+    return _loadLocal();
+  }
+
+  try{
+    const res=await fetch(PANTRY_URL, {
+      method:'GET',
+      headers:{ 'Content-Type':'application/json' }
+    });
+
+    if(res.status===429){
+      console.warn('[PLATFORM7] Pantry rate-limited (429). Using local cache.');
+      return _loadLocal();
+    }
+
+    if(res.ok){
+      _lastCloudFetch=now;
+      const data=await res.json();
+      const raw=(data && Array.isArray(data.scores)) ? data.scores : data;
+      const norm=normalizeTopScores(raw);
+      try{ localStorage.setItem(TOP10_KEY, JSON.stringify(norm)); }catch(e){}
+      return norm;
+    }
+  }catch(e){
+    // network/CORS/parse error — fall back to local
+  }
+
+  return _loadLocal();
+}
+
+function _loadLocal(){
   let raw=null;
   try{
     const stored=localStorage.getItem(TOP10_KEY);
     if(stored) raw=JSON.parse(stored);
-  }catch(e){
-    raw=null;
-  }
+  }catch(e){ raw=null; }
   return normalizeTopScores(raw);
 }
 
-/*
-  DUMMY CLOUD SAVE FUNCTION.
-
-  Later, replace the body with a real cloud API call, e.g.:
-
-    await fetch('/api/scores', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(list)
-    });
-*/
+// Debounced save: multiple rapid calls collapse into one cloud write.
 async function saveTopScores(list){
   const payload=normalizeTopScores(list);
-  const json=JSON.stringify(payload);
 
-  try{
-    localStorage.setItem(TOP10_KEY, json);
-  }catch(e){
-    // ignore local dummy storage failures for now
-  }
+  // Always update local cache immediately.
+  try{ localStorage.setItem(TOP10_KEY, JSON.stringify(payload)); }catch(e){}
 
-  try{
-    if(window.console && console.debug){
-      console.debug('[PLATFORM7] top10 saved', json);
-    }
-  }catch(e){
-    // ignore console issues
-  }
+  _pendingPayload=payload;
+  if(_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(_flushSave, SAVE_DEBOUNCE_MS);
 
   return payload;
+}
+
+async function _flushSave(){
+  const payload=_pendingPayload;
+  _pendingPayload=null;
+  _saveTimer=null;
+  if(!payload) return;
+
+  try{
+    const res=await fetch(PANTRY_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify({ scores:payload })
+    });
+    if(res.status===429){
+      console.warn('[PLATFORM7] Pantry rate-limited on save (429). Kept locally, will sync later.');
+    }
+  }catch(e){
+    // kept in localStorage; cloud sync can be retried later
+  }
 }
 
 function ensureTopScores(){
