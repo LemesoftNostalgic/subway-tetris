@@ -127,6 +127,7 @@ kbd{background:#14203a; border:1px solid var(--line2); border-bottom-width:2px; 
 ul.controls{list-style:none; padding-left:0;}
 ul.controls li{margin-bottom:7px;}
 .ov-foot{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+.ov-foot-actions{display:flex; gap:12px; flex-wrap:wrap;}
 .btn-start{font-family:var(--font-display); font-size:15px; letter-spacing:1px; background:var(--amber); color:var(--deep);
   border:0; padding:14px 22px; border-radius:10px; cursor:pointer;
   box-shadow:0 5px 0 #a8741a, 0 16px 34px rgba(255,194,51,.22);
@@ -149,7 +150,112 @@ ul.controls li{margin-bottom:7px;}
   padding:6px 10px; border-radius:6px; animation:blink 1s steps(2) infinite;}
 .newbest.hidden{display:none;}
 .ov-best-row .ov-best b{color:var(--amber); font-size:23px;}
-.ov-btns{display:flex; gap:12px; margin-top:4px;}
+.ov-btns{display:flex; gap:12px; margin-top:4px; flex-wrap:wrap; justify-content:center;}
+
+.top10-note{
+  font-family:var(--font-display);
+  font-size:12px;
+  letter-spacing:1px;
+  color:var(--green);
+  border:1px solid var(--green);
+  padding:7px 12px;
+  border-radius:8px;
+  animation:blink 1.2s steps(2) infinite;
+}
+.top10-note.hidden{display:none;}
+
+.top10{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin:4px 0 16px;
+  max-height:min(48vh,380px);
+  overflow:auto;
+  padding-right:4px;
+}
+.top-row{
+  display:grid;
+  grid-template-columns:44px 1fr auto;
+  align-items:center;
+  gap:12px;
+  background:linear-gradient(#101a2f,#0a1120);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 12px;
+}
+.top-row.first{
+  border-color:rgba(255,194,51,.7);
+  box-shadow:0 0 18px rgba(255,194,51,.18);
+}
+.top-rank{
+  font-family:var(--font-led);
+  font-size:24px;
+  color:var(--dim);
+  text-align:center;
+  line-height:1;
+}
+.top-row.first .top-rank{
+  color:var(--amber);
+  text-shadow:0 0 12px rgba(255,194,51,.55);
+}
+.top-name{
+  font-family:var(--font-display);
+  font-size:15px;
+  color:#eaf2ff;
+  letter-spacing:1px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.top-score{
+  font-family:var(--font-led);
+  font-size:27px;
+  color:#cfe0ff;
+  line-height:1;
+}
+.top-row.first .top-score{
+  color:var(--amber);
+}
+.top-empty{
+  font-family:var(--font-led);
+  font-size:22px;
+  color:var(--dim);
+  text-align:center;
+  padding:26px 10px;
+  border:1px dashed var(--line2);
+  border-radius:10px;
+}
+
+.name-form{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  align-items:center;
+  margin:6px 0 4px;
+}
+.name-input{
+  width:100%;
+  max-width:330px;
+  background:#0a1120;
+  border:1px solid var(--line2);
+  border-bottom:3px solid var(--amber);
+  border-radius:10px;
+  padding:12px 14px;
+  color:#fff;
+  font-family:var(--font-display);
+  font-size:18px;
+  letter-spacing:2px;
+  text-align:center;
+  outline:none;
+}
+.name-input:focus{
+  box-shadow:0 0 0 3px rgba(255,194,51,.18);
+}
+
+#ovTop10{z-index:30;}
+#ovName{z-index:31;}
 
 /* ---------- banner ---------- */
 .banner{position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); z-index:25; text-align:center;
@@ -181,6 +287,11 @@ body.touch-on .touch{display:flex;}
   .ov-cols{grid-template-columns:1fr;}
   .ov-blink{display:none;}
   .hints{display:none;}
+}
+@media (max-width:600px){
+  .top-rank{font-size:20px;}
+  .top-score{font-size:22px;}
+  .name-input{max-width:100%;}
 }
 @media (prefers-reduced-motion:reduce){
   .fog,.dust,.signboard::after,.blink-tag,.ov-blink,.btn-start{animation:none;}
@@ -276,7 +387,10 @@ body.touch-on .touch{display:flex;}
         </div>
       </div>
       <div class="ov-foot">
-        <button class="btn-start" id="btnStart" type="button">BOARD THE TRAIN ▸</button>
+        <div class="ov-foot-actions">
+          <button class="btn-start" id="btnStart" type="button">BOARD THE TRAIN ▸</button>
+          <button class="btn-ghost" id="btnTop10Start" type="button">TOP 10</button>
+        </div>
         <div class="ov-best">STATION RECORD <span id="bestStart">0</span></div>
       </div>
     </div>
@@ -299,9 +413,34 @@ body.touch-on .touch{display:flex;}
         <span class="newbest hidden" id="newBest">NEW STATION RECORD</span>
         <span class="ov-best">BEST <b id="overBest">0</b></span>
       </div>
+      <div class="top10-note hidden" id="top10Note">TOP 10 BOARD UPDATED — CHECK RECORDS</div>
       <div class="ov-btns">
         <button class="btn-start" id="btnReboard" type="button">REBOARD ▸</button>
+        <button class="btn-ghost" id="btnTop10Over" type="button">TOP 10</button>
         <button class="btn-ghost" id="btnMenu" type="button">STATION</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="ovTop10">
+    <div class="ov-card center">
+      <h2 class="ov-pause-t">TOP 10 STATION RECORDS</h2>
+      <p class="ov-sub">CLOUD BOARD PREPARED · JSON READY</p>
+      <div class="top10" id="top10List"></div>
+      <button class="btn-ghost" id="btnCloseTop10" type="button">CLOSE ▸</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="ovName">
+    <div class="ov-card center">
+      <h2 class="ov-pause-t">NEW TOP 10 SCORE</h2>
+      <p class="ov-sub">ENTER A NAME FOR THE BOARD</p>
+      <form class="name-form" id="nameForm" autocomplete="off">
+        <input class="name-input" id="nameInput" maxlength="14" placeholder="PLAYER" spellcheck="false" aria-label="Player name">
+      </form>
+      <div class="ov-btns">
+        <button class="btn-start" id="btnNameSubmit" type="button">SUBMIT ▸</button>
+        <button class="btn-ghost" id="btnNameSkip" type="button">SKIP</button>
       </div>
     </div>
   </div>
@@ -331,7 +470,7 @@ const PIECES={
 };
 const PAL={};
 Object.entries(PIECES).forEach(([t,p])=>PAL[t]={base:p.c, hi:mix(p.c,'#ffffff',.45), lo:mix(p.c,'#000000',.38)});
-const timeFor=l=>Math.max(55, 150-(l-1)*12);          // plenty at first, tighter each level
+const timeFor=l=>Math.max(155, 350-(l-1)*12);          // plenty at first, tighter each level
 const targetFor=l=>13+((l-1)*7)%5-1;                    // surface row varies 6..10 (a bit above middle)
 const dropInterval=()=>Math.max(160, 750-(level-1)*55);
 
@@ -433,6 +572,274 @@ const repT={left:0,right:0,down:0};
 function emptyBoard(){ return Array.from({length:ROWS},()=>Array(COLS).fill(0)); }
 board=emptyBoard();
 
+/* ================= top-10 board (dummy cloud JSON) ================= */
+const TOP10_KEY='platform7_top10';
+let topScores=[];
+let topReady=false;
+let topLoadPromise=null;
+let scoreSubmitted=false;
+let nameCallback=null;
+
+function cleanTopName(raw){
+  return String(raw == null ? '' : raw)
+    .replace(/\s+/g,' ')
+    .trim()
+    .slice(0,14) || 'PLAYER';
+}
+
+function normalizeTopScores(raw){
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr
+    .filter(x => x && typeof x === 'object')
+    .map(x => ({
+      name: cleanTopName(x.name),
+      score: Math.max(0, Math.floor(Number(x.score) || 0))
+    }))
+    .sort((a,b) => b.score - a.score)
+    .slice(0,10);
+}
+
+/*
+  DUMMY CLOUD READ FUNCTION.
+
+  Later, replace the body with a real cloud API call, e.g.:
+
+    const res = await fetch('/api/scores');
+    return await res.json();
+
+  The return shape should be:
+    [
+      { "name": "ACE", "score": 12345 },
+      { "name": "BOB", "score": 9876 }
+    ]
+*/
+async function loadTopScores(){
+  let raw=null;
+  try{
+    const stored=localStorage.getItem(TOP10_KEY);
+    if(stored) raw=JSON.parse(stored);
+  }catch(e){
+    raw=null;
+  }
+  return normalizeTopScores(raw);
+}
+
+/*
+  DUMMY CLOUD SAVE FUNCTION.
+
+  Later, replace the body with a real cloud API call, e.g.:
+
+    await fetch('/api/scores', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(list)
+    });
+*/
+async function saveTopScores(list){
+  const payload=normalizeTopScores(list);
+  const json=JSON.stringify(payload);
+
+  try{
+    localStorage.setItem(TOP10_KEY, json);
+  }catch(e){
+    // ignore local dummy storage failures for now
+  }
+
+  try{
+    if(window.console && console.debug){
+      console.debug('[PLATFORM7] top10 saved', json);
+    }
+  }catch(e){
+    // ignore console issues
+  }
+
+  return payload;
+}
+
+function ensureTopScores(){
+  if(!topReady && !topLoadPromise){
+    topLoadPromise = loadTopScores()
+      .then(list => {
+        topScores=list;
+        topReady=true;
+        updateBestFromTop();
+        renderTop10();
+        updateBestLabels();
+        return list;
+      })
+      .catch(() => {
+        topScores=[];
+        topReady=true;
+        renderTop10();
+        updateBestLabels();
+        return [];
+      });
+  }
+  return topLoadPromise;
+}
+
+function qualifiesForTop10(sc, list){
+  if(sc <= 0) return false;
+  if(list.length < 10) return true;
+  return sc > list[list.length - 1].score;
+}
+
+function updateBestFromTop(){
+  const top = topScores.length ? topScores[0].score : 0;
+  if(top > best){
+    best = top;
+    try{
+      localStorage.setItem('platform7_best', String(best));
+    }catch(e){
+      // ignore
+    }
+  }
+}
+
+function updateBestLabels(){
+  const a=$('#bestStart');
+  const b=$('#overBest');
+  const c=$('#best');
+  if(a) a.textContent=best;
+  if(b) b.textContent=best;
+  if(c) c.textContent=best;
+}
+
+function renderTop10(){
+  const listEl=$('#top10List');
+  if(!listEl) return;
+
+  listEl.innerHTML='';
+
+  if(!topScores.length){
+    const empty=document.createElement('div');
+    empty.className='top-empty';
+    empty.textContent='NO SCORES ON THE BOARD YET';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  topScores.forEach((entry, i) => {
+    const row=document.createElement('div');
+    row.className='top-row' + (i === 0 ? ' first' : '');
+
+    const rank=document.createElement('span');
+    rank.className='top-rank';
+    rank.textContent=String(i + 1).padStart(2, '0');
+
+    const name=document.createElement('span');
+    name.className='top-name';
+    name.textContent=entry.name;
+
+    const sc=document.createElement('span');
+    sc.className='top-score';
+    sc.textContent=entry.score.toLocaleString();
+
+    row.append(rank, name, sc);
+    listEl.appendChild(row);
+  });
+}
+
+async function openTop10(){
+  await ensureTopScores();
+  renderTop10();
+  updateBestLabels();
+  show($('#ovTop10'));
+  const closeBtn=$('#btnCloseTop10');
+  if(closeBtn) closeBtn.blur();
+}
+
+async function maybeSubmitScore(){
+  if(state !== 'gameover' || scoreSubmitted || score <= 0) return;
+
+  // CALL DUMMY LOAD BEFORE UPDATE
+  let current;
+  try{
+    current=await loadTopScores();
+  }catch(e){
+    current=normalizeTopScores([]);
+  }
+
+  topScores=current;
+  topReady=true;
+  updateBestFromTop();
+  updateBestLabels();
+
+  if(!qualifiesForTop10(score, current)) return;
+
+  askName(name => {
+    if(name === null){
+      scoreSubmitted=true;
+      return;
+    }
+
+    const updated = current.slice(0, 10).concat({
+      name: cleanTopName(name),
+      score: score
+    });
+
+    const sorted=normalizeTopScores(updated);
+
+    // CALL DUMMY SAVE AFTER UPDATE
+    saveTopScores(sorted)
+      .then(saved => {
+        topScores=saved;
+        topReady=true;
+        updateBestFromTop();
+        renderTop10();
+        updateBestLabels();
+        scoreSubmitted=true;
+        const note=$('#top10Note');
+        if(note) note.classList.remove('hidden');
+      })
+      .catch(() => {
+        topScores=sorted;
+        topReady=true;
+        updateBestFromTop();
+        renderTop10();
+        updateBestLabels();
+        scoreSubmitted=true;
+        const note=$('#top10Note');
+        if(note) note.classList.remove('hidden');
+      });
+  });
+}
+
+function askName(callback){
+  nameCallback=callback;
+  const input=$('#nameInput');
+  if(input) input.value='';
+  show($('#ovName'));
+  requestAnimationFrame(() => {
+    if(input){
+      input.focus();
+      input.select();
+    }
+  });
+}
+
+function submitName(){
+  if(!nameCallback) return;
+  const cb=nameCallback;
+  nameCallback=null;
+
+  const name=cleanTopName($('#nameInput').value);
+  const input=$('#nameInput');
+  if(input) input.value=name;
+
+  hide($('#ovName'));
+  cb(name);
+}
+
+function skipName(){
+  if(!nameCallback) return;
+  const cb=nameCallback;
+  nameCallback=null;
+
+  hide($('#ovName'));
+  cb(null);
+}
+
 /* ================= board / pieces ================= */
 function nextType(){ if(!bag.length) bag='IJLOSTZ'.split('').sort(()=>Math.random()-.5); return bag.pop(); }
 function collide(m,x,y){
@@ -476,7 +883,7 @@ function spawn(){
 }
 function topOf(c){ for(let r=0;r<ROWS;r++) if(board[r][c]) return r; return ROWS; }
 function isWin(){ for(let c=0;c<COLS;c++) if(topOf(c)!==targetRow) return false; return true; }
-function aboveLine(){ for(let r=0;r<targetRow;r++) if(board[r].some(v=>v)) return true; return false; }
+function aboveLine(){ for(let r=0;r<targetRow-1;r++) if(board[r].some(v=>v)) return true; return false; }
 
 function hardDrop(){
   if(state!=='playing'||clearing||!piece) return;
@@ -538,6 +945,10 @@ function startGame(){
   board=emptyBoard(); bag=[]; nextPieceType=nextType();
   trainX=-TRAINL-60; state='levelup'; levelupT=0;
   hide($('#ovStart')); hide($('#ovOver')); hide($('#ovPause'));
+  hide($('#ovTop10')); hide($('#ovName'));
+  nameCallback=null; scoreSubmitted=false;
+  const note=$('#top10Note');
+  if(note) note.classList.add('hidden');
   showBanner('LEVEL 1','BUILD THE PLATFORM · '+fmt(timeLeft));
   updateGoalPanel(); updateHUD(); spawn();
   sfx.ui();
@@ -554,22 +965,51 @@ function nextLevel(){
   updateGoalPanel(); updateHUD(); spawn();
 }
 function gameOver(reason){
-  state='gameover'; sfx.over(); trainX=NOSE0;
-  const nb=score>best;
-  if(nb){ best=score; try{localStorage.setItem('platform7_best',String(best));}catch(e){} }
+  state='gameover';
+  sfx.over();
+  trainX=NOSE0;
+  scoreSubmitted=false;
+
+  const note=$('#top10Note');
+  if(note) note.classList.add('hidden');
+
   $('#overReason').textContent = reason==='time'
     ? 'THE CLOCK RAN OUT — THE TRAIN LEFT WITHOUT YOU'
     : 'STACKED PAST THE TUNNEL CEILING';
   $('#overScore').textContent=score;
-  $('#overBest').textContent=best;
-  $('#newBest').classList.toggle('hidden',!nb);
-  $('#bestStart').textContent=best;
-  show($('#ovOver'));
+
+  ensureTopScores().then(() => {
+    updateBestFromTop();
+
+    const nb=score > best;
+    if(nb){
+      best=score;
+      try{
+        localStorage.setItem('platform7_best', String(best));
+      }catch(e){
+        // ignore
+      }
+    }
+
+    updateBestLabels();
+    $('#newBest').classList.toggle('hidden', !nb);
+    show($('#ovOver'));
+    maybeSubmitScore();
+  });
 }
 function toMenu(){
-  state='menu'; board=emptyBoard(); piece=null; trainX=NOSE0;
-  hide($('#ovOver')); show($('#ovStart'));
-  $('#bestStart').textContent=best; updateGoalPanel();
+  state='menu';
+  board=emptyBoard();
+  piece=null;
+  trainX=NOSE0;
+  hide($('#ovOver'));
+  hide($('#ovName'));
+  hide($('#ovTop10'));
+  nameCallback=null;
+  scoreSubmitted=false;
+  show($('#ovStart'));
+  $('#bestStart').textContent=best;
+  updateGoalPanel();
 }
 function togglePause(){
   if(state==='playing'){ state='paused'; show($('#ovPause')); }
@@ -699,7 +1139,7 @@ function drawBG(){
   ctx.fillStyle='rgba(255,194,51,.03)'; ctx.fillRect(BX,sy,COLS*CELL,BY+ROWS*CELL-sy);
   ctx.strokeStyle='rgba(140,170,220,.05)'; ctx.lineWidth=1;
   for(let c=1;c<COLS;c++) line(BX+c*CELL+.5,BY,BX+c*CELL+.5,BY+ROWS*CELL);
-  for(let r=1;r<ROWS;r++) line(BX,BY+r*CELL+.5,BX+COLS*CELL,BY+r*CELL+.5);
+  for(let r=1;r<ROWS;r++) line(BX,BY+r*CELL+.5,BX+COLS*CELL,BY+ROWS*CELL+.5);
   ctx.strokeStyle='#26365a'; ctx.lineWidth=2; ctx.strokeRect(BX-8.5,BY-8.5,COLS*CELL+17,ROWS*CELL+17);
   ctx.strokeStyle='rgba(255,194,51,.5)'; ctx.lineWidth=2;
   [[BX-8,BY-8,1,1],[BX+COLS*CELL+8,BY-8,-1,1],[BX-8,BY+ROWS*CELL+8,1,-1],[BX+COLS*CELL+8,BY+ROWS*CELL+8,-1,-1]]
@@ -884,7 +1324,18 @@ function updateTag(){
 }
 
 /* ================= input ================= */
-window.addEventListener('keydown',e=>{
+window.addEventListener('keydown', e => {
+  const nameOpen = !$('#ovName').classList.contains('hidden');
+  if(nameOpen) return;
+
+  const topOpen = !$('#ovTop10').classList.contains('hidden');
+  if(topOpen){
+    if(e.key === 'Escape'){
+      hide($('#ovTop10'));
+    }
+    return;
+  }
+
   AudioSys.init();
   const k=e.key;
   if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' '].includes(k)) e.preventDefault();
@@ -932,6 +1383,42 @@ $('#btnStart').addEventListener('click',function(){ this.blur(); startGame(); })
 $('#btnResume').addEventListener('click',function(){ this.blur(); togglePause(); });
 $('#btnReboard').addEventListener('click',function(){ this.blur(); startGame(); });
 $('#btnMenu').addEventListener('click',function(){ this.blur(); toMenu(); });
+
+$('#btnTop10Start').addEventListener('click', function(){
+  this.blur();
+  openTop10();
+});
+$('#btnTop10Over').addEventListener('click', function(){
+  this.blur();
+  openTop10();
+});
+$('#btnCloseTop10').addEventListener('click', function(){
+  this.blur();
+  hide($('#ovTop10'));
+});
+
+$('#nameForm').addEventListener('submit', e => {
+  e.preventDefault();
+  submitName();
+  });
+$('#btnNameSubmit').addEventListener('click', function(){
+  this.blur();
+  submitName();
+});
+$('#btnNameSkip').addEventListener('click', function(){
+  this.blur();
+  skipName();
+  });
+$('#nameInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    submitName();
+  } else if(e.key === 'Escape'){
+    e.preventDefault();
+    skipName();
+  }
+});
+
 window.addEventListener('pointerdown',()=>AudioSys.init(),{once:true});
 document.addEventListener('visibilitychange',()=>{ if(document.hidden&&state==='playing') togglePause(); });
 
@@ -957,6 +1444,15 @@ function loop(now){
 $('#bestStart').textContent=best;
 updateGoalPanel(); updateHUD();
 requestAnimationFrame(loop);
+
+/*
+  INITIAL TOP-10 LOAD.
+
+  This is called before the user is expected to be able to view the board.
+  It uses the dummy loadTopScores() function.
+*/
+ensureTopScores();
+renderTop10();
 </script>
 </body>
 </html>
